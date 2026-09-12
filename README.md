@@ -1,8 +1,7 @@
 # Trabalho 1: Analise de Complexidade em Estruturas de Listas
 ## Etapa 1: Implementacao da Biblioteca de Listas Encadeadas Genericas
 
-Disciplina: Tecnicas de Programacao Avancada (TPA)  
-Instituicao: Instituto Federal do Espirito Santo (Ifes) - Campus Colatina  
+Disciplina: Tecnicas de Programacao Avancada (TPA)    
 Docente: Prof. Victorio Albani de Carvalho  
 
 ---
