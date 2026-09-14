@@ -135,6 +135,25 @@ public class ListaEncadeada<T> implements IColecao<T> {
         return sb.toString();
     }
 
+    // Remove a mesma instancia, mesmo quando o comparador considera outros valores iguais.
+    public boolean removerReferencia(T valor) {
+        No<T> anterior = null;
+        No<T> atual = primeiro;
+        while (atual != null) {
+            if (atual.getValor() == valor) {
+                if (anterior == null) {
+                    primeiro = atual.getProximo();
+                } else {
+                    anterior.setProximo(atual.getProximo());
+                }
+                return true;
+            }
+            anterior = atual;
+            atual = atual.getProximo();
+        }
+        return false;
+    }
+
     public T obterUltimo() {
         if (primeiro == null) {
             return null;

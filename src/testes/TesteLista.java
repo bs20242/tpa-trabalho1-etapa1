@@ -6,6 +6,11 @@ import java.util.Comparator;
 
 public class TesteLista {
     public static void main(String[] args) {
+        boolean assertionsAtivas = false;
+        assert assertionsAtivas = true;
+        if (!assertionsAtivas) {
+            throw new IllegalStateException("Execute com -ea para habilitar os testes");
+        }
         testarListaNaoOrdenada();
         testarListaOrdenada();
         testarToStringEQuantidade();

@@ -1,0 +1,16 @@
+{
+  "inicio_utc": "2026-09-14T23:51:39.078657+00:00",
+  "sistema": "Windows-11-10.0.26200-SP0",
+  "processador": "Intel64 Family 6 Model 165 Stepping 5, GenuineIntel",
+  "java": "openjdk version \"21.0.6\" 2025-01-21 LTS\nOpenJDK Runtime Environment Corretto-21.0.6.7.1 (build 21.0.6+7-LTS)\nOpenJDK 64-Bit Server VM Corretto-21.0.6.7.1 (build 21.0.6+7-LTS, mixed mode, sharing)",
+  "seed": 42,
+  "repeticoes": 3,
+  "processo_novo_por_medicao": true,
+  "arquivos_sha256": {
+    "contatos_10000.txt": "83e862691fb78515f0bd3581baaa5dffc49c35d4b431f4d193c28251950574d4",
+    "contatos_25000.txt": "c9bb8cbcf7c53916ab1d360b00a2a669d0b0f17b4511f90f500b2e2c85f4d6dc",
+    "contatos_50000.txt": "49cabd25eb8ed9fe193a6edb2e362c661c2941d3d3858ae8c4be96631b3e91be",
+    "contatos_100000.txt": "9a15b650fa3670419948d71d5412513f72f48a3f1c5e4d7aa7f6c57d228b61e6"
+  },
+  "fim_utc": "2026-09-15T00:08:54.984075+00:00"
+}

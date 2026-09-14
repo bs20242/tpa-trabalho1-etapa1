@@ -1,13 +1,11 @@
 package app;
 
 import colecao.IColecao;
-import colecao.ListaEncadeada;
 import dominio.Contato;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
+import java.nio.file.Path;
 
 public class ProgramaContatos {
     public static void main(String[] args) {
@@ -20,8 +18,9 @@ public class ProgramaContatos {
 
         // Instancia as duas listas como IColecao para nome e telefone
         // Mesma referencia compartilhada entre as listas (sem duplicar objetos em memoria)
-        IColecao<Contato> listaPorNome = new ListaEncadeada<>(new Contato.ComparadorPorNome(), isOrdenada);
-        IColecao<Contato> listaPorTelefone = new ListaEncadeada<>(new Contato.ComparadorPorTelefone(), isOrdenada);
+        CadastroContatos cadastro = new CadastroContatos(isOrdenada);
+        IColecao<Contato> listaPorNome = cadastro.porNome();
+        IColecao<Contato> listaPorTelefone = cadastro.porTelefone();
 
         int opcao = 0;
 
@@ -56,22 +55,8 @@ public class ProgramaContatos {
                     }
 
                     inicioTempo = System.nanoTime();
-                    int contatosCarregados = 0;
-
-                    try (BufferedReader br = new BufferedReader(new FileReader(caminhoArquivo))) {
-                        String linha;
-                        while ((linha = br.readLine()) != null) {
-                            String[] partes = linha.split(";");
-                            if (partes.length >= 2) {
-                                Contato novo = new Contato(partes[0].trim(), partes[1].trim());
-                                // Regra de negocio: nao permite contatos com mesmo telefone
-                                if (listaPorTelefone.pesquisar(novo) == null) {
-                                    listaPorNome.adicionar(novo);
-                                    listaPorTelefone.adicionar(novo);
-                                    contatosCarregados++;
-                                }
-                            }
-                        }
+                    try {
+                        int contatosCarregados = cadastro.carregar(Path.of(caminhoArquivo));
                         fimTempo = System.nanoTime();
                         System.out.println(contatosCarregados + " contatos carregados com sucesso!");
                         System.out.printf("Tempo total de leitura e montagem das listas: %.4f ms\n", (fimTempo - inicioTempo) / 1_000_000.0);
@@ -95,11 +80,9 @@ public class ProgramaContatos {
                     Contato novoContato = new Contato(nome, telefone);
 
                     // Validacao de telefone unico
-                    if (listaPorTelefone.pesquisar(novoContato) != null) {
+                    if (!cadastro.adicionar(novoContato)) {
                         System.out.println("Erro: Ja existe um contato cadastrado com esse telefone!");
                     } else {
-                        listaPorNome.adicionar(novoContato);
-                        listaPorTelefone.adicionar(novoContato);
                         System.out.println("Contato adicionado com sucesso!");
                     }
                     break;
@@ -148,18 +131,17 @@ public class ProgramaContatos {
                     telefone = scanner.nextLine().trim();
                     contatoBusca = new Contato("", telefone);
 
-                    inicioTempo = System.nanoTime();
                     contatoEncontrado = listaPorTelefone.pesquisar(contatoBusca);
-                    if (contatoEncontrado != null) {
-                        listaPorNome.remover(contatoEncontrado);
-                        listaPorTelefone.remover(contatoEncontrado);
-                        fimTempo = System.nanoTime();
+                    inicioTempo = System.nanoTime();
+                    boolean removido = listaPorTelefone.remover(contatoBusca);
+                    fimTempo = System.nanoTime();
+                    if (removido) {
+                        cadastro.removerPorNome(contatoEncontrado);
                         System.out.println("Contato (" + contatoEncontrado + ") excluido com sucesso.");
                     } else {
-                        fimTempo = System.nanoTime();
                         System.out.println("Contato nao existia.");
                     }
-                    System.out.printf("Tempo gasto na remocao: %.4f ms\n", (fimTempo - inicioTempo) / 1_000_000.0);
+                    System.out.printf("Tempo de remover na lista por telefone: %.4f ms\n", (fimTempo - inicioTempo) / 1_000_000.0);
                     break;
 
                 case 6:
@@ -190,11 +172,8 @@ public class ProgramaContatos {
                             System.out.println("Erro: O novo telefone ja pertence a outro contato!");
                         } else {
                             // Para manter a integridade da ordem nas listas encadeadas, removemos o antigo e adicionamos o novo
-                            listaPorNome.remover(contatoEncontrado);
-                            listaPorTelefone.remover(contatoEncontrado);
-
-                            listaPorNome.adicionar(contatoAlterado);
-                            listaPorTelefone.adicionar(contatoAlterado);
+                            cadastro.remover(contatoEncontrado);
+                            cadastro.adicionar(contatoAlterado);
 
                             System.out.println("Dados alterados com sucesso para: " + contatoAlterado);
                         }

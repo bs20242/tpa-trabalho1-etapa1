@@ -1,8 +1,56 @@
-# Trabalho 1 - Listas e análise de complexidade
+"""Atualiza texto, codigos numerados e tabelas; preserva a secao de IA existente."""
+import csv
+import json
+import re
+from pathlib import Path
 
-**Instituto Federal do Espírito Santo - Campus Serra**
-**Curso:** Sistemas de Informação
-**Disciplina:** Técnicas de Programação Avançada
+ROOT = Path(__file__).resolve().parent.parent
+relatorio = ROOT / "RELATORIO.md"
+anterior = relatorio.read_text(encoding="utf-8")
+ia = anterior.split("### 1.3 Utilização de Ferramentas de Inteligência Artificial", 1)[1].split("### 1.4", 1)[0]
+fonte = (ROOT / "src/colecao/ListaEncadeada.java").read_text(encoding="utf-8")
+dados = list(csv.DictReader((ROOT / "dados/resultados.csv").open(encoding="utf-8-sig")))
+ambiente = json.loads((ROOT / "dados/ambiente.json").read_text(encoding="utf-8"))
+
+
+def codigo(metodo):
+    inicio = re.search(r"    public [^\n]+ " + metodo + r"\(", fonte).start()
+    fim = fonte.index("{", inicio) + 1
+    nivel = 1
+    while nivel:
+        nivel += (fonte[fim] == "{") - (fonte[fim] == "}")
+        fim += 1
+    linhas = [l[4:] for l in fonte[inicio:fim].splitlines() if l.strip()]
+    return "```java\n" + "\n".join(f"{i}: {l}" for i, l in enumerate(linhas, 1)) + "\n```"
+
+
+def numero(valor):
+    return f"{float(valor):.4f}".replace(".", ",")
+
+
+def tabela(campos):
+    linhas = ["| N | " + " | ".join(t for _, _, t in campos) + " |",
+              "| --- | " + " | ".join("---" for _ in campos) + " |"]
+    for n in sorted({int(r["n"]) for r in dados}):
+        valores = [numero(next(r[campo] for r in dados if r["modo"] == modo and int(r["n"]) == n))
+                   for modo, campo, _ in campos]
+        linhas.append("| " + f"{n:,}".replace(",", ".") + " | " + " | ".join(valores) + " |")
+    return "\n".join(linhas)
+
+
+montagem = tabela([(m, "tempoMontagemMs", t) for m, t in [("nao-ordenada", "Não ordenada"), ("ordenada", "Ordenada")]])
+busca = tabela([(m, c, t) for m, c, t in [
+    ("nao-ordenada", "tempoBuscaTelefoneMs", "Não ord.: telefone"),
+    ("nao-ordenada", "tempoBuscaNomeMs", "Não ord.: nome"),
+    ("ordenada", "tempoBuscaTelefoneMs", "Ord.: telefone"),
+    ("ordenada", "tempoBuscaNomeMs", "Ord.: nome")]])
+remocao = tabela([(m, "tempoRemocaoMs", t) for m, t in [("nao-ordenada", "Não ordenada"), ("ordenada", "Ordenada")]])
+
+texto = f"""# Trabalho 1 - Listas e análise de complexidade
+
+**Instituto Federal do Espírito Santo - Campus Serra**  
+**Curso:** Sistemas de Informação  
+**Disciplina:** Técnicas de Programação Avançada  
 **Professor:** Victorio Albani de Carvalho
 
 **Integrantes:** Bernardo Simão Rosa, Levi Monteiro e Matheus Abreu.
@@ -37,18 +85,7 @@ O tempo da carga inclui leitura, validação e inserção nas duas listas. Nas b
 
 Contato.toString devolve nome e telefone separados por hífen. ListaEncadeada.toString coloca os valores entre colchetes e os separa por vírgulas. A biblioteca não imprime mensagens para o usuário.
 
-### 1.3 Utilização de Ferramentas de Inteligência Artificial
-
-O grupo usou ferramentas de Inteligência Artificial apenas como apoio em dúvidas técnicas e para ajudar em algumas tarefas:
-
-* **Geração dos dados de teste:** consulta sobre como gerar muitos telefones sem repetição em Java, usando `HashSet` e uma seed fixa.
-* **Gráficos:** ajuda com a sintaxe do `matplotlib`, em Python, para formatar as curvas e os eixos.
-* **Conferência das contas:** os integrantes fizeram a contagem das operações de cada linha com base no Modelo Simplificado de Custos. A IA ajudou a conferir as simplificações das somas.
-* **Formatação do texto:** ajuda para organizar as tabelas em Markdown.
-
-**Autoria e compreensão:** os integrantes tomaram as decisões sobre a biblioteca, escreveram todas as classes, executaram os testes de desempenho em laboratório e fizeram a análise teórica. O grupo compreendeu e conferiu os resultados, e todos estão preparados para explicar o trabalho na entrevista individual.
-
-### 1.4 Organização e execução
+### 1.3 Utilização de Ferramentas de Inteligência Artificial{ia}### 1.4 Organização e execução
 
 O código fica em src/colecao, src/dominio, src/app e src/testes. A pasta dados guarda os scripts, os tempos e os dados do ambiente. A pasta relatorio guarda os gráficos e o PDF. README.md traz os comandos completos para compilar, testar e repetir as medições.
 
@@ -70,17 +107,7 @@ Os códigos abaixo foram extraídos de ListaEncadeada.java, sem linhas vazias e 
 
 ### 2.2 quantidadeNos
 
-```java
-1: public int quantidadeNos() {
-2:     int total = 0;
-3:     No<T> atual = primeiro;
-4:     while (atual != null) {
-5:         total++;
-6:         atual = atual.getProximo();
-7:     }
-8:     return total;
-9: }
-```
+{codigo('quantidadeNos')}
 
 | Linhas | O que acontece | Quantidade de execuções |
 | --- | --- | --- |
@@ -96,31 +123,7 @@ A lista inteira é percorrida em qualquer caso. Por isso, o melhor e o pior caso
 
 ### 2.3 adicionar
 
-```java
-1: public boolean adicionar(T novoValor) {
-2:     if (novoValor == null) {
-3:         return false;
-4:     }
-5:     No<T> novoNo = new No<>(novoValor);
-6:     if (!ordenada) {
-7:         novoNo.setProximo(primeiro);
-8:         primeiro = novoNo;
-9:         return true;
-10:     }
-11:     if (primeiro == null || comparador.compare(novoValor, primeiro.getValor()) <= 0) {
-12:         novoNo.setProximo(primeiro);
-13:         primeiro = novoNo;
-14:         return true;
-15:     }
-16:     No<T> atual = primeiro;
-17:     while (atual.getProximo() != null && comparador.compare(novoValor, atual.getProximo().getValor()) > 0) {
-18:         atual = atual.getProximo();
-19:     }
-20:     novoNo.setProximo(atual.getProximo());
-21:     atual.setProximo(novoNo);
-22:     return true;
-23: }
-```
+{codigo('adicionar')}
 
 **Lista não ordenada:** para um valor não nulo, a inserção é sempre no início.
 
@@ -156,34 +159,7 @@ O pior caso é O(n). O melhor caso é O(1), quando a lista está vazia ou o valo
 
 ### 2.4 pesquisar
 
-```java
-1: public T pesquisar(T valor) {
-2:     if (valor == null || primeiro == null) {
-3:         return null;
-4:     }
-5:     No<T> atual = primeiro;
-6:     if (ordenada) {
-7:         while (atual != null) {
-8:             int comp = comparador.compare(atual.getValor(), valor);
-9:             if (comp == 0) {
-10:                 return atual.getValor();
-11:             }
-12:             if (comp > 0) {
-13:                 return null;
-14:             }
-15:             atual = atual.getProximo();
-16:         }
-17:     } else {
-18:         while (atual != null) {
-19:             if (comparador.compare(atual.getValor(), valor) == 0) {
-20:                 return atual.getValor();
-21:             }
-22:             atual = atual.getProximo();
-23:         }
-24:     }
-25:     return null;
-26: }
-```
+{codigo('pesquisar')}
 
 Para contar o pior caso sem misturar saídas diferentes, usamos uma chave ausente e, no modo ordenado, maior que todas as chaves da lista. Consideramos n maior ou igual a 1.
 
@@ -210,35 +186,7 @@ O melhor caso é O(1), quando o primeiro nó corresponde à chave. A ordenação
 
 ### 2.5 remover
 
-```java
-1: public boolean remover(T valor) {
-2:     if (valor == null || primeiro == null) {
-3:         return false;
-4:     }
-5:     if (comparador.compare(primeiro.getValor(), valor) == 0) {
-6:         primeiro = primeiro.getProximo();
-7:         return true;
-8:     }
-9:     if (ordenada && comparador.compare(primeiro.getValor(), valor) > 0) {
-10:         return false;
-11:     }
-12:     No<T> anterior = primeiro;
-13:     No<T> atual = primeiro.getProximo();
-14:     while (atual != null) {
-15:         int comp = comparador.compare(atual.getValor(), valor);
-16:         if (comp == 0) {
-17:             anterior.setProximo(atual.getProximo());
-18:             return true;
-19:         }
-20:         if (ordenada && comp > 0) {
-21:             return false;
-22:         }
-23:         anterior = atual;
-24:         atual = atual.getProximo();
-25:     }
-26:     return false;
-27: }
-```
+{codigo('remover')}
 
 Usamos novamente uma chave ausente, maior que todas as existentes no modo ordenado, e n maior ou igual a 1. O primeiro nó é testado separadamente; o laço percorre os outros n - 1 nós.
 
@@ -303,38 +251,23 @@ As chaves de busca são criadas antes de iniciar o cronômetro. Depois das medi�
 
 Os tempos vêm de System.nanoTime e são convertidos para milissegundos. Não houve aquecimento controlado nem isolamento do sistema operacional. São medições simples para observar o crescimento, e não uma prova experimental da complexidade.
 
-**Ambiente registrado nesta execução:** Windows-11-10.0.26200-SP0. Intel64 Family 6 Model 165 Stepping 5, GenuineIntel. Java: openjdk version "21.0.6" 2025-01-21 LTS; OpenJDK Runtime Environment Corretto-21.0.6.7.1 (build 21.0.6+7-LTS); OpenJDK 64-Bit Server VM Corretto-21.0.6.7.1 (build 21.0.6+7-LTS, mixed mode, sharing).
+**Ambiente registrado nesta execução:** {ambiente['sistema']}. {ambiente['processador']}. Java: {ambiente['java'].replace(chr(10), '; ')}.
 
-**Início da coleta (UTC):** 2026-09-14T23:51:39.078657+00:00. Os detalhes estão em dados/ambiente.json, junto com a seed e os hashes SHA-256 dos arquivos. dados/resultados_brutos.csv guarda as 24 linhas originais; dados/resultados.csv guarda as oito linhas com medianas. dados/executar_benchmarks.py permite repetir a coleta.
+**Início da coleta (UTC):** {ambiente['inicio_utc']}. Os detalhes estão em dados/ambiente.json, junto com a seed e os hashes SHA-256 dos arquivos. dados/resultados_brutos.csv guarda as 24 linhas originais; dados/resultados.csv guarda as oito linhas com medianas. dados/executar_benchmarks.py permite repetir a coleta.
 
 ### 3.2 Tempos medidos
 
 **Tabela 1 - Leitura e montagem completa das duas listas (ms; mediana de três execuções)**
 
-| N | Não ordenada | Ordenada |
-| --- | --- | --- |
-| 10.000 | 34,4864 | 961,5603 |
-| 25.000 | 59,1761 | 8590,5368 |
-| 50.000 | 89,2657 | 65166,8602 |
-| 100.000 | 145,9843 | 252445,4744 |
+{montagem}
 
 **Tabela 2 - Busca do contato da cauda (ms; mediana de três execuções)**
 
-| N | Não ord.: telefone | Não ord.: nome | Ord.: telefone | Ord.: nome |
-| --- | --- | --- | --- | --- |
-| 10.000 | 1,9462 | 1,3518 | 0,5913 | 0,5995 |
-| 25.000 | 4,1928 | 3,8690 | 2,8232 | 3,3659 |
-| 50.000 | 6,9765 | 2,1509 | 5,6915 | 5,1778 |
-| 100.000 | 6,0489 | 2,0732 | 10,6781 | 9,3485 |
+{busca}
 
 **Tabela 3 - Remoção na lista por telefone (ms; mediana de três execuções)**
 
-| N | Não ordenada | Ordenada |
-| --- | --- | --- |
-| 10.000 | 1,0386 | 0,7271 |
-| 25.000 | 3,9615 | 3,9314 |
-| 50.000 | 7,6943 | 9,1309 |
-| 100.000 | 8,4620 | 16,6710 |
+{remocao}
 
 ### 3.3 Gráficos
 
@@ -346,8 +279,7 @@ Os tempos vêm de System.nanoTime e são convertidos para milissegundos. Não ho
 
 ### 3.4 O que os resultados mostram
 
-- Montagem não ordenada: ao passar de 50.000 para 100.000 contatos, o tempo mediano aumentou 1.64 vezes.
-- Montagem ordenada: ao passar de 50.000 para 100.000 contatos, o tempo mediano aumentou 3.87 vezes.
+{chr(10).join(f"- Montagem {'não ordenada' if modo == 'nao-ordenada' else 'ordenada'}: ao passar de 50.000 para 100.000 contatos, o tempo mediano aumentou {float(next(r['tempoMontagemMs'] for r in dados if r['modo'] == modo and r['n'] == '100000')) / float(next(r['tempoMontagemMs'] for r in dados if r['modo'] == modo and r['n'] == '50000')):.2f} vezes." for modo in ['nao-ordenada', 'ordenada'])}
 
 Em um modelo quadrático simples, dobrar N multiplica a parte dominante do custo por cerca de quatro. A comparação com essa referência ajuda a interpretar os tempos, mas não exige uma razão exata: alocação, acesso à memória e execução da JVM também influenciam o tempo observado.
 
@@ -358,3 +290,8 @@ Nas buscas, o alvo é único e está na cauda: são comparados N valores. Na rem
 As medições de busca e remoção são curtas e variam entre as repetições. Três repetições e a mediana reduzem o peso de um resultado isolado, mas ainda são uma amostra pequena. Não é possível atribuir uma diferença específica ao JIT, ao coletor de lixo ou a outro processo sem medir esses fatores. Os dados brutos permitem conferir essa variação.
 
 **Conclusão:** a biblioteca tem inserção constante no modo não ordenado e linear no pior caso ordenado. Busca e remoção têm pior caso linear nos dois modos; quantidadeNos sempre percorre a lista. No cadastro completo, a validação dos telefones usa HashSet: o modo não ordenado tem custo esperado Θ(N), enquanto o modo ordenado tem custo O(N²) por causa da busca da posição de inserção. As medições confirmam esse comportamento geral, considerando a variação normal da JVM.
+"""
+texto = "\n".join(linha.rstrip() for linha in texto.splitlines()) + "\n"
+relatorio.write_text(texto, encoding="utf-8")
+assert relatorio.read_text(encoding="utf-8").split("### 1.3 Utilização de Ferramentas de Inteligência Artificial", 1)[1].split("### 1.4", 1)[0] == ia
+print("Relatorio atualizado; secao de IA preservada.")
