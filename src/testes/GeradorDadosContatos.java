@@ -1,7 +1,9 @@
 package testes;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
@@ -25,14 +27,20 @@ public class GeradorDadosContatos {
             return;
         }
         int quantidade = Integer.parseInt(args[0]);
+        if (quantidade < 1) throw new IllegalArgumentException("Quantidade deve ser positiva");
         String arquivoSaida = args[1];
         long seed = args.length >= 3 ? Long.parseLong(args[2]) : 42L;
 
         Random random = new Random(seed);
         Set<String> telefonesUsados = new HashSet<>();
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(arquivoSaida))) {
-            for (int i = 0; i < quantidade; i++) {
+        try (BufferedWriter bw = Files.newBufferedWriter(Path.of(arquivoSaida), StandardCharsets.UTF_8)) {
+            // Primeiro no arquivo e maior nas duas chaves: termina na cauda nos dois modos.
+            // Os demais nomes continuam aleatorios e podem se repetir.
+            bw.write("ZZZ Contato Final;99999999999");
+            bw.newLine();
+            telefonesUsados.add("99999999999");
+            for (int i = 1; i < quantidade; i++) {
                 String nome = nomeAleatorio(random);
                 String telefone = telefoneUnico(random, telefonesUsados);
                 bw.write(nome + ";" + telefone);

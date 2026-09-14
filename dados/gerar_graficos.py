@@ -1,9 +1,12 @@
 import csv
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
 base = Path(__file__).parent
 saida = base.parent / "relatorio"
+saida.mkdir(exist_ok=True)
 rows = list(csv.DictReader(open(base / "resultados.csv", encoding="utf-8-sig")))
 
 def serie(modo, campo):
@@ -21,8 +24,8 @@ n2, t2 = serie("ordenada", "tempoMontagemMs")
 plt.plot(n1, t1, marker="o", color=COR_NAOORD, label="Lista Nao-Ordenada")
 plt.plot(n2, t2, marker="o", color=COR_ORD, label="Lista Ordenada")
 plt.xlabel("Quantidade de contatos (N)")
-plt.ylabel("Tempo de montagem (ms)")
-plt.title("Grafico 1: Tempo de Montagem da Lista em funcao de N")
+plt.ylabel("Tempo (ms; mediana de 3 execucoes)")
+plt.title("Leitura, validacao e montagem das duas listas")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -40,8 +43,8 @@ plt.plot(n1n, t1n, marker="s", color=COR_NAOORD, linestyle="--", label="Nao-Orde
 plt.plot(n2t, t2t, marker="o", color=COR_ORD, linestyle="-", label="Ordenada (busca telefone)")
 plt.plot(n2n, t2n, marker="s", color=COR_ORD, linestyle="--", label="Ordenada (busca nome)")
 plt.xlabel("Quantidade de contatos (N)")
-plt.ylabel("Tempo de busca (ms)")
-plt.title("Grafico 2: Tempo de Busca do Ultimo Contato em funcao de N")
+plt.ylabel("Tempo (ms; mediana de 3 execucoes)")
+plt.title("Busca do contato unico na cauda das duas listas")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -55,8 +58,8 @@ n2, t2 = serie("ordenada", "tempoRemocaoMs")
 plt.plot(n1, t1, marker="o", color=COR_NAOORD, label="Lista Nao-Ordenada")
 plt.plot(n2, t2, marker="o", color=COR_ORD, label="Lista Ordenada")
 plt.xlabel("Quantidade de contatos (N)")
-plt.ylabel("Tempo de remocao (ms)")
-plt.title("Grafico 3: Tempo de Remocao do Ultimo Contato em funcao de N")
+plt.ylabel("Tempo (ms; mediana de 3 execucoes)")
+plt.title("Remocao da cauda na lista por telefone")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()

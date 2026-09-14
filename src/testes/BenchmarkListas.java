@@ -1,68 +1,49 @@
 package testes;
 
-import colecao.ListaEncadeada;
+import app.CadastroContatos;
 import dominio.Contato;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.nio.file.Path;
 import java.io.IOException;
 
-// Roda uma carga de arquivo + busca (telefone e nome) + remocao do ultimo elemento
-// da lista de telefones, medindo os tempos em milissegundos, e imprime uma linha CSV.
+// Uma execucao por processo. Mesma carga do menu e mesmo metodo de remocao medido.
 public class BenchmarkListas {
     public static void main(String[] args) throws IOException {
-        if (args.length < 2) {
-            System.out.println("Uso: java testes.BenchmarkListas <arquivoEntrada> <ordenada:true|false>");
-            return;
+        if (args.length != 2 || !(args[1].equals("true") || args[1].equals("false"))) {
+            throw new IllegalArgumentException("Uso: BenchmarkListas <arquivo> <true|false>");
         }
-        String arquivo = args[0];
         boolean ordenada = Boolean.parseBoolean(args[1]);
-
-        ListaEncadeada<Contato> listaPorNome = new ListaEncadeada<>(new Contato.ComparadorPorNome(), ordenada);
-        ListaEncadeada<Contato> listaPorTelefone = new ListaEncadeada<>(new Contato.ComparadorPorTelefone(), ordenada);
-
-        int n = 0;
+        CadastroContatos cadastro = new CadastroContatos(ordenada);
         long inicio = System.nanoTime();
-        try (BufferedReader br = new BufferedReader(new FileReader(arquivo))) {
-            String linha;
-            while ((linha = br.readLine()) != null) {
-                String[] partes = linha.split(";");
-                if (partes.length >= 2) {
-                    Contato c = new Contato(partes[0].trim(), partes[1].trim());
-                    listaPorNome.adicionar(c);
-                    listaPorTelefone.adicionar(c);
-                    n++;
-                }
-            }
+        int n = cadastro.carregar(Path.of(args[0]));
+        double montagem = (System.nanoTime() - inicio) / 1_000_000.0;
+
+        // A selecao e a verificacao do alvo ficam fora das medicoes.
+        Contato alvo = cadastro.ultimoPorTelefone();
+        if (alvo == null || cadastro.ultimoPorNome() != alvo
+                || cadastro.porNome().pesquisar(new Contato(alvo.getNome(), "")) != alvo) {
+            throw new IllegalArgumentException("Use o gerador: alvo unico deve ser a cauda das duas listas");
         }
-        long fim = System.nanoTime();
-        double tempoMontagemMs = (fim - inicio) / 1_000_000.0;
+        Contato chaveTelefone = new Contato("", alvo.getTelefone());
+        Contato chaveNome = new Contato(alvo.getNome(), "");
 
-        // Pior caso de busca: ultimo no percorrido na travessia da lista de telefones.
-        Contato alvo = listaPorTelefone.obterUltimo();
+        inicio = System.nanoTime();
+        Contato porTelefone = cadastro.porTelefone().pesquisar(chaveTelefone);
+        double buscaTelefone = (System.nanoTime() - inicio) / 1_000_000.0;
+        inicio = System.nanoTime();
+        Contato porNome = cadastro.porNome().pesquisar(chaveNome);
+        double buscaNome = (System.nanoTime() - inicio) / 1_000_000.0;
 
-        long i1 = System.nanoTime();
-        listaPorTelefone.pesquisar(new Contato("", alvo.getTelefone()));
-        long f1 = System.nanoTime();
-        double tempoBuscaTelefoneMs = (f1 - i1) / 1_000_000.0;
-
-        long i2 = System.nanoTime();
-        listaPorNome.pesquisar(new Contato(alvo.getNome(), ""));
-        long f2 = System.nanoTime();
-        double tempoBuscaNomeMs = (f2 - i2) / 1_000_000.0;
-
-        long i3 = System.nanoTime();
-        listaPorTelefone.remover(new Contato("", alvo.getTelefone()));
-        long f3 = System.nanoTime();
-        double tempoRemocaoMs = (f3 - i3) / 1_000_000.0;
-
-        System.out.println(String.join(",",
-            ordenada ? "ordenada" : "nao-ordenada",
-            String.valueOf(n),
-            String.valueOf(tempoMontagemMs),
-            String.valueOf(tempoBuscaTelefoneMs),
-            String.valueOf(tempoBuscaNomeMs),
-            String.valueOf(tempoRemocaoMs)
-        ));
+        // Mede so o metodo da biblioteca; a sincronizacao da outra lista vem depois.
+        inicio = System.nanoTime();
+        boolean removido = cadastro.porTelefone().remover(chaveTelefone);
+        double remocao = (System.nanoTime() - inicio) / 1_000_000.0;
+        boolean removidoNome = cadastro.removerPorNome(alvo);
+        if (porTelefone != alvo || porNome != alvo || !removido || !removidoNome
+                || cadastro.porNome().quantidadeNos() != n - 1
+                || cadastro.porTelefone().quantidadeNos() != n - 1) {
+            throw new IllegalStateException("Resultado incorreto no benchmark");
+        }
+        System.out.println((ordenada ? "ordenada" : "nao-ordenada") + "," + n + ","
+                + montagem + "," + buscaTelefone + "," + buscaNome + "," + remocao);
     }
 }
