@@ -10,7 +10,7 @@
 **Integrantes do Grupo:**
 - Levi Monteiro
 - Matheus Abreu
-- Bernardo
+- Bernardo Simão Rosa
 
 **Repositório no GitHub:** https://github.com/bs20242/tpa-trabalho1-etapa1
 
@@ -22,9 +22,9 @@
 
 | Frente de trabalho | Descrição | Integrante(s) responsável(is) |
 | --- | --- | --- |
-| Biblioteca genérica (`IColecao`, `No`, `ListaEncadeada`) | Estrutura de nós encadeados e lista genérica com suporte a `Comparator<T>` e ao parâmetro `ordenada`; testes automatizados (`TesteLista`) | Levi Monteiro, Matheus Abreu, Bernardo |
-| Domínio e aplicação interativa (`Contato`, `ProgramaContatos`) | Modelagem de `Contato`, comparadores por nome e por telefone, menu interativo de 7 opções com medição de tempo | Levi Monteiro, Matheus Abreu, Bernardo |
-| Benchmarks empíricos e análise matemática | Gerador de dados sintéticos (`GeradorDadosContatos`), benchmark automatizado (`BenchmarkListas`), dedução matemática linha a linha, tabelas e gráficos | Levi Monteiro, Matheus Abreu, Bernardo |
+| Biblioteca genérica (`IColecao`, `No`, `ListaEncadeada`) | Estrutura de nós encadeados e lista genérica com suporte a `Comparator<T>` e ao parâmetro `ordenada`; testes automatizados (`TesteLista`) | Levi Monteiro, Matheus Abreu, Bernardo Simão Rosa |
+| Domínio e aplicação interativa (`Contato`, `ProgramaContatos`) | Modelagem de `Contato`, comparadores por nome e por telefone, menu interativo de 7 opções com medição de tempo | Levi Monteiro, Matheus Abreu, Bernardo Simão Rosa |
+| Benchmarks empíricos e análise matemática | Gerador de dados sintéticos (`GeradorDadosContatos`), benchmark automatizado (`BenchmarkListas`), dedução matemática linha a linha, tabelas e gráficos | Levi Monteiro, Matheus Abreu, Bernardo Simão Rosa |
 
 > Divisão de tarefas registrada de forma coletiva; ajustar por integrante se o grupo quiser detalhar a contribuição individual de cada um.
 
